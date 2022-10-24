@@ -1,6 +1,6 @@
 import express from "express";
 import bodyParser from 'body-parser'
-import * as postsRoutes from './routes/posts';
+import * as postsRoutes from './routes/posts.routes';
 
 const port = 8080;
 
