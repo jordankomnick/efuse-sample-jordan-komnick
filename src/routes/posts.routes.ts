@@ -31,7 +31,8 @@ router.get('/:id', async (req, res) => {
             const postsRepo = new PostsRepository();
             result = await postsRepo.getPost(id);
             await redisClient.set(id, JSON.stringify(result), {
-                EX: 180
+                EX: 180,
+                NX: true
             });
         }
 
@@ -71,7 +72,15 @@ router.put('/:id', async (req, res) => {
 
         await postsRepo.updatePost(id, {content, user_id});
 
+        const redisClient = createClient();
+        await redisClient.connect();
+
         const updatedPost = await postsRepo.getPost(id);
+
+        await redisClient.set(id, JSON.stringify(updatedPost), {
+            EX: 180,
+            XX: true
+        });
 
         res.status(200).send(updatedPost);
     } catch (e) {
@@ -140,7 +149,8 @@ router.get('/:postId/comments/:commentId', async (req, res) => {
 
             result = await postsRepo.getComment(postId, commentId);
             await redisClient.set(commentId, JSON.stringify(result), {
-                EX: 180
+                EX: 180,
+                NX: true
             });
         }
 
@@ -191,7 +201,15 @@ router.put('/:postId/comments/:commentId', async (req, res) => {
 
         await postsRepo.updateComment(postId, commentId, {content, user_id});
 
+        const redisClient = createClient();
+        await redisClient.connect();
+
         const updatedComment = await postsRepo.getComment(postId, commentId);
+
+        await redisClient.set(commentId, JSON.stringify(updatedComment), {
+            EX: 180,
+            XX: true
+        });
 
         res.status(200).send(updatedComment);
     } catch (e) {
