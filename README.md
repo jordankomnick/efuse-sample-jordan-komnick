@@ -30,6 +30,7 @@ There will be a console log with the port number when the server is running loca
   - It is better to spend developer time working on features that are immediately valuable rather than laying groundwork for potential future development, especially on tight deadlines
 - I am assuming that whenever a post or comment is updated, the user_id will always be passed in, as it would not make sense to update a post without a user performing the action
 - If I was designing this API myself I probably wouldn't include the GET /posts/:id/comments endpoint because the comments are included in the GET /posts/:id endpoint, but it is in the requirements
+- In a full application, the logic would be further split into routes->middleware->controller->service->repository. Because this is a basic CRUD application, I chose to skip most of the layers.
 
 ## Caveats
 - I am working on a laptop from 2014 with 8GB RAM, so I could not set up Docker for this project
