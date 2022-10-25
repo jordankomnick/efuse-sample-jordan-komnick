@@ -1,5 +1,6 @@
 import * as express from "express";
 import {PostsRepository} from "../repositories/posts.repository";
+import {createClient} from "redis";
 
 const router = express.Router()
 
@@ -17,8 +18,22 @@ router.get('/:id', async (req, res) => {
     const {id} = req.params;
 
     try {
-        const postsRepo = new PostsRepository();
-        const result = await postsRepo.getPost(id);
+        let result;
+
+        const redisClient = createClient();
+        await redisClient.connect();
+
+        const cacheResults = await redisClient.get(id);
+
+        if (cacheResults) {
+            result = JSON.parse(cacheResults);
+        } else {
+            const postsRepo = new PostsRepository();
+            result = await postsRepo.getPost(id);
+            await redisClient.set(id, JSON.stringify(result), {
+                EX: 180
+            });
+        }
 
         if (result) {
             res.status(200).send(result);
@@ -106,14 +121,28 @@ router.get('/:postId/comments/:commentId', async (req, res) => {
     const {postId, commentId} = req.params;
 
     try {
-        const postsRepo = new PostsRepository();
-        const post = await postsRepo.getPost(postId);
-        if (!post) {
-            res.status(404).send({message: `No post found with id ${postId}`});
-            return;
-        }
+        let result;
+        const redisClient = createClient();
+        await redisClient.connect();
 
-        const result = await postsRepo.getComment(postId, commentId);
+        const cacheResults = await redisClient.get(commentId);
+
+        if (cacheResults) {
+            result = JSON.parse(cacheResults);
+        } else {
+
+            const postsRepo = new PostsRepository();
+            const post = await postsRepo.getPost(postId);
+            if (!post) {
+                res.status(404).send({message: `No post found with id ${postId}`});
+                return;
+            }
+
+            result = await postsRepo.getComment(postId, commentId);
+            await redisClient.set(commentId, JSON.stringify(result), {
+                EX: 180
+            });
+        }
 
         if (result) {
             res.status(200).send(result);

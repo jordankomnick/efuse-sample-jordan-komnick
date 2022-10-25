@@ -7,11 +7,15 @@ Exact installation and setup instructions will vary depending on your operating 
 - NodeJS 16: https://nodejs.org/en/download/
 - MongoDB Community Server: https://www.mongodb.com/try/download/community
   - Create a Mongo database called "local" with a collection called "posts" running on the default port 27017
+- Redis: https://redis.io/docs/getting-started/installation/
+  - Run Redis on the default port 6379
 
 ### Main Components
 Run the following in the directory where you have downloaded the project:
 
 `npm install`
+
+Make sure MongoDB and Redis are running on the default ports
 
 ## Running and Usage
 Once everything is installed, run the application with:
@@ -30,3 +34,4 @@ There will be a console log with the port number when the server is running loca
 ## Caveats
 - I am working on a laptop from 2014 with 8GB RAM, so I could not set up Docker for this project
 - This is my first time ever using MongoDB, so there are some usage decisions that I know aren't ideal and I would fix if I had more time to research
+- While I have worked with applications that use Redis for caching, this is the first time actually implementing it myself
