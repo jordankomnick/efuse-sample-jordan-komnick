@@ -30,13 +30,13 @@ router.get('/:id', async (req, res) => {
         } else {
             const postsRepo = new PostsRepository();
             result = await postsRepo.getPost(id);
+        }
+
+        if (result) {
             await redisClient.set(id, JSON.stringify(result), {
                 EX: 180,
                 NX: true
             });
-        }
-
-        if (result) {
             res.status(200).send(result);
         } else {
             res.status(404).send({message: `No post found with id ${id}`});
@@ -100,6 +100,10 @@ router.delete('/:id', async (req, res) => {
         }
 
         await postsRepo.deletePost(id);
+
+        const redisClient = createClient();
+        await redisClient.connect();
+        await redisClient.del(id);
 
         res.status(200).send(toBeDeleted);
     } catch (e) {
