@@ -152,13 +152,13 @@ router.get('/:postId/comments/:commentId', async (req, res) => {
             }
 
             result = await postsRepo.getComment(postId, commentId);
+        }
+
+        if (result) {
             await redisClient.set(commentId, JSON.stringify(result), {
                 EX: 180,
                 NX: true
             });
-        }
-
-        if (result) {
             res.status(200).send(result);
         } else {
             res.status(404).send({message: `No comment found with id ${commentId}`});
@@ -172,10 +172,25 @@ router.get('/:id/comments', async (req, res) => {
     const {id} = req.params;
 
     try {
-        const postsRepo = new PostsRepository();
-        const result = await postsRepo.getPost(id);
+        let result;
+
+        const redisClient = createClient();
+        await redisClient.connect();
+
+        const cacheResults = await redisClient.get(id);
+
+        if (cacheResults) {
+            result = JSON.parse(cacheResults);
+        } else {
+            const postsRepo = new PostsRepository();
+            result = await postsRepo.getPost(id);
+        }
 
         if (result) {
+            await redisClient.set(id, JSON.stringify(result), {
+                EX: 180,
+                NX: true
+            });
             res.status(200).send(result.comments);
         } else {
             res.status(404).send({message: `No post found with id ${id}`});
@@ -240,6 +255,10 @@ router.delete('/:postId/comments/:commentId', async (req, res) => {
         }
 
         await postsRepo.deleteComment(postId, commentId);
+
+        const redisClient = createClient();
+        await redisClient.connect();
+        await redisClient.del(commentId);
 
         res.status(200).send(commentToBeDeleted);
     } catch (e) {
